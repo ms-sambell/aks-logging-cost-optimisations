@@ -1,0 +1,371 @@
+{
+    "version": "Notebook/1.0",
+    "items": [
+      {
+        "type": 1,
+        "content": {
+          "json": "# Overview\r\n\r\nThis workbook provides a way to visualise Azure Diagnostic Logging that is published to a Log Analytics workspace. Use this to try to optimise your Azure logging costs.\r\n\r\n"
+        },
+        "name": "text - 0"
+      },
+      {
+        "type": 9,
+        "content": {
+          "version": "KqlParameterItem/1.0",
+          "crossComponentResources": [
+            "{Subscription}"
+          ],
+          "parameters": [
+            {
+              "id": "3e0e00a6-bc11-42a3-964f-80728be256c3",
+              "version": "KqlParameterItem/1.0",
+              "name": "Subscription",
+              "type": 6,
+              "typeSettings": {
+                "additionalResourceOptions": [],
+                "includeAll": true
+              },
+              "value": "/subscriptions/d1d8779d-38d7-4f06-91db-9cbc8de0176f"
+            },
+            {
+              "id": "95a45501-31b5-4ea2-bcb3-eb208e0080e2",
+              "version": "KqlParameterItem/1.0",
+              "name": "Workspace",
+              "type": 5,
+              "isRequired": true,
+              "query": "where type =~ \"microsoft.operationalinsights/workspaces\"\r\n| project subscriptionId,id,name\r\n| project value =id, label = name",
+              "crossComponentResources": [
+                "{Subscription}"
+              ],
+              "typeSettings": {
+                "additionalResourceOptions": [
+                  "value::1"
+                ],
+                "showDefault": false
+              },
+              "timeContextFromParameter": "TimeRange",
+              "defaultValue": "value::1",
+              "queryType": 1,
+              "resourceType": "microsoft.resourcegraph/resources",
+              "value": "/subscriptions/d1d8779d-38d7-4f06-91db-9cbc8de0176f/resourceGroups/soc/providers/microsoft.operationalinsights/workspaces/cybersecuritysoc"
+            },
+            {
+              "id": "836fa8c6-e073-4ea5-a095-1eb1894c5a6a",
+              "version": "KqlParameterItem/1.0",
+              "name": "TimeRange",
+              "type": 4,
+              "typeSettings": {
+                "selectableValues": [
+                  {
+                    "durationMs": 14400000
+                  },
+                  {
+                    "durationMs": 43200000
+                  },
+                  {
+                    "durationMs": 86400000
+                  },
+                  {
+                    "durationMs": 172800000
+                  },
+                  {
+                    "durationMs": 259200000
+                  },
+                  {
+                    "durationMs": 604800000
+                  },
+                  {
+                    "durationMs": 1209600000
+                  },
+                  {
+                    "durationMs": 2592000000
+                  }
+                ]
+              },
+              "value": {
+                "durationMs": 14400000
+              }
+            }
+          ],
+          "style": "pills",
+          "queryType": 1,
+          "resourceType": "microsoft.resourcegraph/resources"
+        },
+        "customWidth": "100",
+        "name": "WSSelector"
+      },
+      {
+        "type": 12,
+        "content": {
+          "version": "NotebookGroup/1.0",
+          "groupType": "editable",
+          "items": [
+            {
+              "type": 1,
+              "content": {
+                "json": "# Log Analytics Workspaces"
+              },
+              "name": "text - 0"
+            },
+            {
+              "type": 1,
+              "content": {
+                "json": "# Azure Diagnostics\r\n\r\nAzure Diagnostics are exportable logs for Azure Services. They're broken down into different categories for each resource type. \r\n\r\n### Links:\r\n- [AKS Diagnostics](https://learn.microsoft.com/en-gb/azure/aks/monitor-aks-reference#resource-logs)\r\n- [IKEDiagnosticLog](https://learn.microsoft.com/en-gb/azure/vpn-gateway/troubleshoot-vpn-with-azure-diagnostics#IKEDiagnosticLog)",
+                "style": "info"
+              },
+              "customWidth": "20",
+              "name": "text - 2"
+            },
+            {
+              "type": 3,
+              "content": {
+                "version": "KqlItem/1.0",
+                "query": "AzureDiagnostics\r\n| project _BilledSize, TimeGenerated, Category\r\n| summarize CategoryGB=sum(_BilledSize) / 1.E9 by Category, bin(TimeGenerated, 1h)\r\n",
+                "size": 0,
+                "title": "Azure Diagnostic Logs - By Category {TimeRange}",
+                "timeContextFromParameter": "TimeRange",
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "crossComponentResources": [
+                  "{Workspace}"
+                ],
+                "visualization": "linechart",
+                "chartSettings": {
+                  "ySettings": {
+                    "numberFormatSettings": {
+                      "unit": 5,
+                      "options": {
+                        "style": "decimal",
+                        "useGrouping": true
+                      }
+                    }
+                  }
+                }
+              },
+              "customWidth": "40",
+              "name": "query - 1 - Copy - Copy"
+            },
+            {
+              "type": 3,
+              "content": {
+                "version": "KqlItem/1.0",
+                "query": "let TotalGB=\r\n    AzureDiagnostics\r\n    | project TimeGenerated, _BilledSize\r\n    | where TimeGenerated {TimeRange:value}\r\n    | summarize sum(_BilledSize) / 1.E9;\r\nAzureDiagnostics\r\n| project _BilledSize, Category\r\n| summarize ResourceLogCount=count(), CategoryGB=sum(_BilledSize) / 1.E9 by Category\r\n| project Category,\r\n    ['Percentage by size']=CategoryGB * 100 / toscalar(TotalGB), ['Log GB']=CategoryGB ",
+                "size": 0,
+                "title": "Azure Diagnostic Logs - By Category {TimeRange}",
+                "timeContextFromParameter": "TimeRange",
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "crossComponentResources": [
+                  "{Workspace}"
+                ],
+                "visualization": "piechart"
+              },
+              "customWidth": "40",
+              "name": "query - 1 - Copy"
+            },
+            {
+              "type": 3,
+              "content": {
+                "version": "KqlItem/1.0",
+                "query": "let TotalGB=\r\n    AzureDiagnostics\r\n    | project _BilledSize, TimeGenerated\r\n    | where TimeGenerated {TimeRange:value}\r\n    | summarize sum(_BilledSize) / 1.E9;\r\nAzureDiagnostics\r\n| project _ResourceId, Category, _BilledSize\r\n| summarize ResourceGB=sum(_BilledSize) / 1.E9 by _ResourceId, Category\r\n| limit 50\r\n| project Resource=_ResourceId, Category, \r\n    ['Percentage by size']=ResourceGB * 100 / toscalar(TotalGB), ['Log GB']=ResourceGB \r\n| sort by ['Log GB'] desc",
+                "size": 0,
+                "showAnalytics": true,
+                "title": "Azure Diagnostic Log - Detailed Breakdown - Top 50 {TimeRange}",
+                "timeContextFromParameter": "TimeRange",
+                "showExportToExcel": true,
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "crossComponentResources": [
+                  "{Workspace}"
+                ],
+                "gridSettings": {
+                  "formatters": [
+                    {
+                      "columnMatch": "Resource",
+                      "formatter": 0,
+                      "formatOptions": {
+                        "customColumnWidthSetting": "40%"
+                      }
+                    },
+                    {
+                      "columnMatch": "Percentage by size",
+                      "formatter": 1,
+                      "numberFormat": {
+                        "unit": 1,
+                        "options": {
+                          "style": "decimal"
+                        }
+                      }
+                    },
+                    {
+                      "columnMatch": "Log GB",
+                      "formatter": 1,
+                      "numberFormat": {
+                        "unit": 5,
+                        "options": {
+                          "style": "decimal"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "name": "query - 1"
+            },
+            {
+              "type": 1,
+              "content": {
+                "json": "## Important Notes\r\n\r\n### Kubernetes\r\n\r\n\r\n- `kube-audit` - is the full Kubernetes audit log, which includes any `get` or `list` API calls. This log is very verbose. - Decide if you need all the internal `get` and `list` internal Kubernetes API calls. \r\n- `kube-admin-audit` - Is a parsed list of the Kubernetes audit logs. It removes the `get` and `list` API calls to reduce the log size. \r\n\r\n## Questions:\r\n- Do you need to `kube-audit` logs or can we use the `kube-admin-audit`?\r\n- Can we remove the duplicate diagnostic log (mentioned above)?\r\n\r\n[AKS Diagnostics Documentation](https://learn.microsoft.com/en-gb/azure/aks/monitor-aks-reference#resource-logs)\r\n\r\n\r\n",
+                "style": "info"
+              },
+              "customWidth": "20",
+              "name": "text - 3"
+            },
+            {
+              "type": 3,
+              "content": {
+                "version": "KqlItem/1.0",
+                "query": "\r\nAzureDiagnostics\r\n| project ResourceType, Category, _ResourceId\r\n| where ResourceType == \"MANAGEDCLUSTERS\"\r\n| summarize  KubeAudit = countif(Category == \"kube-audit\"), KubeAuditAdmin = countif(Category == \"kube-audit-admin\") by Resource=_ResourceId\r\n\r\n",
+                "size": 0,
+                "showAnalytics": true,
+                "title": "AKS Diagnostic Logging {TimeRange}",
+                "noDataMessage": "There's no AKS Diagnostic Logs stored in the selected Log Analytics Workspace",
+                "timeContextFromParameter": "TimeRange",
+                "showExportToExcel": true,
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "crossComponentResources": [
+                  "{Workspace}"
+                ],
+                "gridSettings": {
+                  "formatters": [
+                    {
+                      "columnMatch": "Resource",
+                      "formatter": 0,
+                      "formatOptions": {
+                        "customColumnWidthSetting": "50%"
+                      }
+                    },
+                    {
+                      "columnMatch": "KubeAudit",
+                      "formatter": 18,
+                      "formatOptions": {
+                        "thresholdsOptions": "icons",
+                        "thresholdsGrid": [
+                          {
+                            "operator": "==",
+                            "thresholdValue": "0",
+                            "representation": "more",
+                            "text": ""
+                          },
+                          {
+                            "operator": ">",
+                            "thresholdValue": "1",
+                            "representation": "Available",
+                            "text": ""
+                          },
+                          {
+                            "operator": "Default",
+                            "thresholdValue": null,
+                            "representation": "unknown",
+                            "text": ""
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "columnMatch": "KubeAuditAdmin",
+                      "formatter": 18,
+                      "formatOptions": {
+                        "thresholdsOptions": "icons",
+                        "thresholdsGrid": [
+                          {
+                            "operator": "==",
+                            "thresholdValue": "0",
+                            "representation": "more",
+                            "text": ""
+                          },
+                          {
+                            "operator": ">",
+                            "thresholdValue": "1",
+                            "representation": "Available",
+                            "text": ""
+                          },
+                          {
+                            "operator": "Default",
+                            "thresholdValue": null,
+                            "representation": "unknown",
+                            "text": ""
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              "customWidth": "80",
+              "name": "query - 1 - Copy"
+            },
+            {
+              "type": 1,
+              "content": {
+                "json": "## Diagnostic Data Audit\r\n\r\nThe table to the right displays all the Azure Diagnostics data by Log GB and Resource Type. The `Category` is the specific `Diagnostic log` setup to be exported on the Resource Type. \r\n\r\n\r\n## Considerations\r\n\r\n- Is the data `Operational` or `Security`? - Potential Operational Tables: `QueryRuntimeStatistics, cluster-autoscaler, cloud-controller-manager, PartitionKeyStatistics, kube-scheduler`\r\n- Is the data being actively queried or used in an alert? Is the Category being ingested intentional?\r\n- How long will you need data for? (Data retention period) - Look at the data types to understand what's contained in each log. \r\n- Can the Category be changed to Basic Logs? (Ideas: `NetworkSecurityGroupEvents, NetworkSecurityGroupRuleCounter, AzureFirewallNetworkRule, AzureFirewallApplicationRule`)\r\n- Is this data duplicated within the Azure Environment? - Resources support multiple Diagnostic Log export sources. \r\n- Does the Log Table support Data Collection Rules for ingestion transformations?\r\n\r\n\r\n> Note: To View the logs for each category use the query: `AzureDiagnostics| where Category == $CategoryName `\r\n> The `export to xlsx` and `open in search` options are available by clicking the top right corner of the panel\r\n\r\n## Additional Information\r\n- [AzureDiagnostics Glossary by Azure Service](https://learn.microsoft.com/azure/azure-monitor/essentials/resource-logs-schema)\r\n- [Azure Basic Log Use Cases](https://learn.microsoft.com/en-us/azure/sentinel/basic-logs-use-cases)\r\n- [Azure Log Analytics Configure Table Retention](https://learn.microsoft.com/azure/sentinel/configure-data-retention)",
+                "style": "info"
+              },
+              "customWidth": "40",
+              "name": "text - 11"
+            },
+            {
+              "type": 3,
+              "content": {
+                "version": "KqlItem/1.0",
+                "query": "let TotalGB=\r\n    AzureDiagnostics\r\n    | project TimeGenerated, _BilledSize\r\n    | where TimeGenerated {TimeRange:value}\r\n    | summarize sum(_BilledSize) / 1.E9;\r\nAzureDiagnostics\r\n| project _BilledSize, Category, ResourceType\r\n| summarize ResourceLogCount=count(), CategoryGB=sum(_BilledSize) / 1.E9 by Category, ResourceType\r\n| project Category, ResourceType,\r\n    ['Percentage by size']=CategoryGB * 100 / toscalar(TotalGB), ['Log GB']=CategoryGB\r\n| order by ['Percentage by size'] desc",
+                "size": 2,
+                "showAnalytics": true,
+                "title": "All Azure Diagnostic Data {TimeRange}",
+                "timeContextFromParameter": "TimeRange",
+                "showExportToExcel": true,
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "crossComponentResources": [
+                  "{Workspace}"
+                ],
+                "visualization": "table",
+                "gridSettings": {
+                  "formatters": [
+                    {
+                      "columnMatch": "Percentage by size",
+                      "formatter": 0,
+                      "numberFormat": {
+                        "unit": 1,
+                        "options": {
+                          "style": "decimal"
+                        }
+                      }
+                    },
+                    {
+                      "columnMatch": "Log GB",
+                      "formatter": 0,
+                      "numberFormat": {
+                        "unit": 5,
+                        "options": {
+                          "style": "decimal"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "customWidth": "60",
+              "name": "azureDiagnosticsBreakdownServicePercentage"
+            }
+          ]
+        },
+        "name": "lawGroup"
+      }
+    ],
+    "fallbackResourceIds": [
+      "Azure Monitor"
+    ],
+    "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+  }
