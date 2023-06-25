@@ -2,11 +2,11 @@
 
 ## Overview
 
-Bundling up content to help customers optimisating logging for workloads running on Azure Kubernetes Service.
+Content to assist customers in optimizing logging for workloads that run on Azure Kubernetes Service.
 
 ## Data Collection Rule
 
-Log Analytics Workspace support on-ingestion transformation for certain tables. Luckily the `ContainerLog` and `ContainerLogv2` tables are both supported. This means you can reduce the logging cost of your AKS clusters by filtering out unneeded logs. This is also great for dropping any logs with Personal Identifiable Information before it's ingested.
+Log Analytics Workspace support on-ingestion transformation for specific tables. Luckily the `ContainerLog` and `ContainerLogv2` tables are both supported. This feature means you can reduce the logging cost of your AKS clusters by filtering out unneeded logs. Additionally, it allows you to drop any logs containing Personal Identifiable Information before they are ingested.
 
 ### Guide
 
@@ -27,7 +27,7 @@ This repository contains Bicep modules to deploy the above DCR filters on a Log 
 
 ![dcr](.img/log-reduction.png)
 
-However to make the most of the DCR, review your Pod Logs and identify any noisy / unhelpful log messages. Ideally applications should only log useful information. To quick start reviewing your pod logs import my [AKS Workbook](https://github.com/ms-sambell/aks-workbook) and navigate to the logs table.
+To make the most of the DCR, review your Pod Logs and identify any noisy / unhelpful log messages. Ideally applications should only log useful information. To quick start reviewing your pod logs import my [AKS Workbook](https://github.com/ms-sambell/aks-workbook) and navigate to the logs table.
 
 ![example-pod-logs-audit](.img/logs.png)
 
